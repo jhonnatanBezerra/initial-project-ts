@@ -1,6 +1,14 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
+
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+
+const ACCESS_TOKEN_EXP = "15m";
+const REFRESH_TOKEN_EXP = "7d";
+
 export function login(req: Request, res: Response) {
   const { email, password } = req.body;
 
@@ -13,13 +21,21 @@ export function login(req: Request, res: Response) {
     return res.status(401).json({ message: "Credenciais inválidas" });
   }
 
-  const secret = process.env.JWT_SECRET || "default_secret";
 
-  const token = jwt.sign(
-    { id: "1", email },
-    secret,
-    { expiresIn: "1h" }
-  );
+  const accessToken = jwt.sign({ userId: 1 }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXP });
+  const refreshToken = jwt.sign({ userId: 1 }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXP });
 
-  return res.json({ token });
+  const serializedUser = {
+    id: 1,
+    email: "admin@teste.com",
+  }
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
+
+  return res.json({ user: serializedUser, accessToken });
 }

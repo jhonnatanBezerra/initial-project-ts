@@ -1,8 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import { routes } from './Routes';
+import cookieParser from 'cookie-parser';
 import 'dotenv/config';
-import AppError from './Errors/AppError';
+
+import { routes } from './Routes';
+
 
 
 export const app = express();
@@ -16,5 +18,6 @@ app.use(cors({
   origin: '*',
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 app.use(routes);
